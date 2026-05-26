@@ -311,15 +311,6 @@ const SuperadminDashboard = ({ token }) => {
   const [pending, setPending] = useState([]);
   const [error, setError] = useState('');
 
-  const stats = useMemo(() => {
-    return {
-      total: users.length,
-      pending: pending.length,
-      producer: users.filter(u => u.role === 'producer').length,
-      consumer: users.filter(u => u.role === 'consumer').length
-    };
-  }, [users, pending]);
-
   const loadData = async () => {
     try {
       const [u, p] = await Promise.all([axios.get(`${API_BASE}/admin/users`, { headers }), axios.get(`${API_BASE}/admin/users/pending`, { headers })]);
@@ -331,16 +322,10 @@ const SuperadminDashboard = ({ token }) => {
 
   return (
     <main className="dashboard-main">
-      <section className="hero-section dashboard-hero" style={{ background: 'linear-gradient(135deg, #1A1D23, #061C3D)', height: 'auto', minHeight: 'unset', padding: '120px 0 60px' }}>
+      <section className="hero-section dashboard-hero" style={{ background: 'linear-gradient(135deg, #1A1D23, #061C3D)', height: 'auto', minHeight: 'unset', padding: '100px 0 40px' }}>
         <div className="container hero-content-inner">
           <h1 className="animate-fade-up">Dashboard</h1>
-          <p className="animate-fade-up" style={{ marginBottom: '40px' }}>Kelola akses pengguna dan pantau pertumbuhan platform ArahLoka.</p>
-          <div className="feature-strip" style={{ marginTop: '30px', justifyContent: 'center', gap: '15px' }}>
-            <div className="feature-item" style={{ flex: '1', maxWidth: '180px', padding: '12px' }}><div><h4 style={{ fontSize: '0.65rem' }}>Total Pengguna</h4><p style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-primary)' }}>{stats.total}</p></div></div>
-            <div className="feature-item" style={{ flex: '1', maxWidth: '180px', padding: '12px' }}><div><h4 style={{ fontSize: '0.65rem' }}>Menunggu Approval</h4><p style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-danger)' }}>{stats.pending}</p></div></div>
-            <div className="feature-item" style={{ flex: '1', maxWidth: '180px', padding: '12px' }}><div><h4 style={{ fontSize: '0.65rem' }}>Penyedia Jasa</h4><p style={{ fontSize: '1.1rem', fontWeight: 800 }}>{stats.producer}</p></div></div>
-            <div className="feature-item" style={{ flex: '1', maxWidth: '180px', padding: '12px' }}><div><h4 style={{ fontSize: '0.65rem' }}>Turis</h4><p style={{ fontSize: '1.1rem', fontWeight: 800 }}>{stats.consumer}</p></div></div>
-          </div>
+          <p className="animate-fade-up" style={{ marginBottom: '0' }}>Kelola akses pengguna dan pantau pertumbuhan platform ArahLoka.</p>
         </div>
       </section>
 
