@@ -591,6 +591,29 @@ const ConsumerDashboard = ({ token }) => {
   const [allDestinations, setAllDestinations] = useState(FALLBACK_DESTINATIONS);
   const [savedTrips, setSavedTrips] = useState([]);
   const [offers, setOffers] = useState([]);
+
+  // FIX: load public offers independently so tourist page still shows active offers
+  // even if bookings/saved-trips request fails.
+  useEffect(() => {
+    let alive = true;
+
+    const loadPublicOffers = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/offers`);
+        if (!alive) return;
+        const data = Array.isArray(res.data) ? res.data : [];
+        setOffers(data.filter((offer) => !offer.status || offer.status === 'active'));
+      } catch (e) {
+        console.error('Gagal mengambil penawaran wisata:', e);
+      }
+    };
+
+    loadPublicOffers();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [myBookings, setMyBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
