@@ -629,13 +629,27 @@ const ConsumerDashboard = ({ token }) => {
 
   const loadData = async () => {
     try {
-      const [d, t, o, b] = await Promise.all([
+      const [d, t, o, b] = await Promise.allSettled([
         axios.get(`${API_BASE}/destinations`),
         axios.get(`${API_BASE}/saved-trips`),
         axios.get(`${API_BASE}/offers`),
         axios.get(`${API_BASE}/my-bookings`, { headers })
       ]);
-      setAllDestinations(d.data); setSavedTrips(t.data); setOffers(o.data); setMyBookings(b.data); setError('');
+
+      if (d.status === 'fulfilled') setAllDestinations(d.value.data);
+      if (t.status === 'fulfilled') setSavedTrips(t.value.data);
+
+      if (o.status === 'fulfilled') {
+        const offerData = Array.isArray(o.value.data) ? o.value.data : [];
+        setOffers(offerData.filter((offer) => !offer.status || offer.status === 'active'));
+      }
+
+      if (b.status === 'fulfilled') {
+        const bookingData = Array.isArray(b.value.data) ? b.value.data : [];
+        setMyBookings(bookingData);
+      }
+
+      setError('');
     } catch (err) {
       setAllDestinations(FALLBACK_DESTINATIONS);
       setError(err.response?.data?.error || 'Sebagian data tidak dapat dimuat.');
@@ -665,6 +679,8 @@ const ConsumerDashboard = ({ token }) => {
       const res = await axios.post(`${API_BASE}/bookings`, { ...bookingForm, offer_id: selectedOffer.id }, { headers });
       const newBookingId = res.data.id;
       setInfoMessage('Booking berhasil dikonfirmasi. Checklist persiapan Anda sudah siap.');
+      const refreshedBookings = await axios.get(`${API_BASE}/my-bookings`, { headers });
+      setMyBookings(Array.isArray(refreshedBookings.data) ? refreshedBookings.data : []);
       setSelectedOffer(null);
       setBookingForm({ booking_date: '', number_of_people: 1, notes: '' });
       loadData();
