@@ -785,24 +785,41 @@ app.patch('/api/bookings/:id/checklist/:checklistItemId', authenticateToken, req
 
 app.get('/api/my-bookings', authenticateToken, requireApprovedUser, authorizeRole('consumer'), async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    // Auto expire accepted bookings whose date is older than today
-    await run(
-      "UPDATE bookings SET status = 'expired' WHERE consumer_id = ? AND status = 'accepted' AND booking_date < ?",
-      [req.user.id, today]
-    );
+    console.log('Fetching my bookings for user:', req.user);
 
     const bookings = await all(
-      `SELECT b.*, o.title, o.location, o.price, o.image_url
-       FROM bookings b
-       JOIN offers o ON o.id = b.offer_id
-       WHERE b.consumer_id = ?
-       ORDER BY b.created_at DESC`,
+      `SELECT
+        b.id,
+        b.consumer_id,
+        b.offer_id,
+        b.booking_date,
+        b.number_of_people,
+        b.notes,
+        b.status,
+        o.title AS title,
+        o.title AS offer_title,
+        o.location,
+        o.description,
+        o.category,
+        o.duration,
+        o.price,
+        o.image_url,
+        u.name AS producer_name
+      FROM bookings b
+      JOIN offers o ON b.offer_id = o.id
+      LEFT JOIN users u ON o.producer_id = u.id
+      WHERE b.consumer_id = ?
+      ORDER BY b.id DESC`,
       [req.user.id]
     );
+
     res.json(bookings);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch bookings' });
+  } catch (err) {
+    console.error('Failed to fetch my bookings:', err);
+    res.status(500).json({
+      error: 'Failed to fetch bookings',
+      detail: err.message
+    });
   }
 });
 

@@ -677,6 +677,37 @@ const ConsumerDashboard = ({ token }) => {
     if (!selectedOffer) return;
     try {
       const res = await axios.post(`${API_BASE}/bookings`, { ...bookingForm, offer_id: selectedOffer.id }, { headers });
+
+      // FIX BOOKING SAYA: tampilkan booking baru langsung di halaman Turis.
+      const createdBooking = res.data?.booking || res.data || {};
+      const optimisticBooking = {
+        ...createdBooking,
+        id: createdBooking.id || Date.now(),
+        title: createdBooking.title || createdBooking.offer_title || selectedOffer.title,
+        offer_title: createdBooking.offer_title || selectedOffer.title,
+        location: createdBooking.location || selectedOffer.location,
+        booking_date: createdBooking.booking_date || bookingForm.booking_date,
+        number_of_people: createdBooking.number_of_people || bookingForm.number_of_people,
+        notes: createdBooking.notes || bookingForm.notes,
+        status: createdBooking.status || 'pending',
+      };
+
+      setMyBookings((prev) => [optimisticBooking, ...prev]);
+
+      try {
+        const refreshed = await axios.get(`${API_BASE}/my-bookings`, { headers });
+        const refreshedData = Array.isArray(refreshed.data)
+          ? refreshed.data
+          : Array.isArray(refreshed.data?.bookings)
+            ? refreshed.data.bookings
+            : [];
+
+        if (refreshedData.length > 0) {
+          setMyBookings(refreshedData);
+        }
+      } catch (refreshError) {
+        console.warn('Booking sudah dibuat, tetapi refresh Booking Saya gagal:', refreshError);
+      }
       const newBookingId = res.data.id;
       setInfoMessage('Booking berhasil dikonfirmasi. Checklist persiapan Anda sudah siap.');
       const refreshedBookings = await axios.get(`${API_BASE}/my-bookings`, { headers });
